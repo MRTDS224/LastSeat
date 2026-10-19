@@ -3,7 +3,7 @@ import logging
 import random
 import string
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -91,7 +91,7 @@ class GDSBookingClient:
                     "pnr_reference": pnr,
                     "eticket_number": eticket,
                     "provider": "DUFFEL_AMADEUS_SANDBOX",
-                    "issued_at": datetime.now(timezone.utc).isoformat(),
+                    "issued_at": datetime.now(UTC).isoformat(),
                 },
             )
 
@@ -142,3 +142,4 @@ class GDSBookingClient:
             issued_at=datetime.fromisoformat(payload["issued_at"]),
             provider=payload["provider"],
         )
+

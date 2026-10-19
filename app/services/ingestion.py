@@ -2,9 +2,9 @@ import asyncio
 import logging
 import random
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import Any, ClassVar
 
 import redis.asyncio as aioredis
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -34,7 +34,7 @@ class DealIngestionService:
         1. Upsert the normalized DealPayload into `flight_deals` table.
         2. Publish the normalized payload into the Redis Stream (`stream:flight_deals`).
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         initial_status = (
             DealStatus.ACTIVE.value if deal.seats_available > 0 else DealStatus.SOLD_OUT.value
         )
@@ -112,7 +112,7 @@ class GDSPollerService:
     normalizing raw offers into `DealPayload`.
     """
 
-    SAMPLE_GDS_OFFERS: list[dict[str, Any]] = [
+    SAMPLE_GDS_OFFERS: ClassVar[list[dict[str, Any]]] = [
         {
             "carrier": "AF",
             "flight_no": "AF006",
@@ -189,7 +189,7 @@ class GDSPollerService:
 
     def _build_normalized_deal_from_gds_raw(self, raw_offer: dict[str, Any]) -> DealPayload:
         """Transform a simulated raw Duffel/Amadeus offer into the unified DealPayload model."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         departure_at = now + timedelta(hours=random.randint(3, 18))
         arrival_at = departure_at + timedelta(hours=int(raw_offer["duration_hours"]))
         expires_at = departure_at - timedelta(hours=1)
@@ -234,10 +234,11 @@ class GDSPollerService:
                 await self.poll_once()
             except asyncio.CancelledError:
                 raise
-            except Exception as exc:
-                logger.exception("Error in GDSPollerService polling cycle: %s", exc)
+            except Exception:
+                logger.exception("Error in GDSPollerService polling cycle")
 
             try:
                 await asyncio.wait_for(self._stop_event.wait(), timeout=self.interval_seconds)
             except TimeoutError:
                 continue
+

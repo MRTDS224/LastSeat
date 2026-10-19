@@ -132,3 +132,4 @@ class BookingTransaction(Base):
         UniqueConstraint("deal_id", "user_id", name="uq_booking_deal_user"),
         Index("idx_booking_transactions_user", "user_id", "status"),
     )
+

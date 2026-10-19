@@ -26,3 +26,4 @@ build/
 htmlcov/
 .ruff_cache/
 .mypy_cache/
+

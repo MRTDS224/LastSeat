@@ -94,16 +94,16 @@ async def healthcheck() -> dict[str, Any]:
         async with AsyncSessionLocal() as session:
             await session.execute(text("SELECT 1"))
             db_ok = True
-    except Exception as exc:
-        logger.error("Database healthcheck failed: %s", exc)
+    except Exception:
+        logger.exception("Database healthcheck failed")
 
     try:
         redis = await init_redis()
         await redis.ping()
         redis_ok = True
         stream_length = await redis.xlen(settings.REDIS_DEALS_STREAM)
-    except Exception as exc:
-        logger.error("Redis healthcheck failed: %s", exc)
+    except Exception:
+        logger.exception("Redis healthcheck failed")
 
     return {
         "status": "healthy" if (db_ok and redis_ok) else "degraded",
@@ -114,3 +114,4 @@ async def healthcheck() -> dict[str, Any]:
         "stream_backlog": stream_length,
         "poller_enabled": settings.POLLER_ENABLED,
     }
+

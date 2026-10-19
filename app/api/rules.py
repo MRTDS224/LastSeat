@@ -164,3 +164,4 @@ async def delete_agent_rule(
         )
     await session.delete(rule)
     await session.commit()
+

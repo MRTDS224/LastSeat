@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+
 import redis.asyncio as aioredis
 from sqlalchemy.ext.asyncio import (
     AsyncSession,

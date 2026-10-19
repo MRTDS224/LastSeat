@@ -134,3 +134,4 @@ async def get_deal(
             detail=f"Flight deal '{deal_id}' not found.",
         )
     return deal
+

@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import redis.asyncio as aioredis
 from redis.exceptions import ResponseError
@@ -158,7 +158,7 @@ class BookingEngineService:
         Evaluate a newly ingested deal against all matching user rules and execute
         autonomous purchases concurrently to demonstrate anti-collision & distributed locking.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if deal.expires_at <= now:
             logger.info("Deal %s is already expired; skipping matching.", deal.deal_id)
             return []
@@ -282,7 +282,7 @@ class BookingEngineService:
                 db_deal.seats_available -= 1
                 if db_deal.seats_available == 0:
                     db_deal.status = DealStatus.SOLD_OUT.value
-                db_deal.updated_at = datetime.now(timezone.utc)
+                db_deal.updated_at = datetime.now(UTC)
 
                 booking_tx = BookingTransaction(
                     id=uuid.uuid4(),
@@ -315,7 +315,7 @@ class BookingEngineService:
                     passenger_info=rule.passenger_info,
                     idempotency_key=idem_key_str,
                 )
-            except Exception as gds_exc:
+            except (GDSIssuanceError, OSError, RuntimeError) as gds_exc:
                 # 5b. Saga Step 3 (FAILURE PATH): Execute Compensating Transaction!
                 reason = (
                     f"{gds_exc.error_code}: {gds_exc}"
@@ -347,7 +347,7 @@ class BookingEngineService:
                 confirmed_tx = (await session.execute(tx_stmt)).scalar_one()
                 confirmed_tx.status = BookingStatus.CONFIRMED.value
                 confirmed_tx.pnr_reference = confirmation.pnr_reference
-                confirmed_tx.updated_at = datetime.now(timezone.utc)
+                confirmed_tx.updated_at = datetime.now(UTC)
                 await session.commit()
                 await session.refresh(confirmed_tx)
 
@@ -398,7 +398,7 @@ class BookingEngineService:
                 db_deal.seats_available += 1
                 if db_deal.status == DealStatus.SOLD_OUT.value and db_deal.seats_available > 0:
                     db_deal.status = DealStatus.ACTIVE.value
-                db_deal.updated_at = datetime.now(timezone.utc)
+                db_deal.updated_at = datetime.now(UTC)
 
             tx_stmt = (
                 select(BookingTransaction)
@@ -408,7 +408,7 @@ class BookingEngineService:
             tx = (await session.execute(tx_stmt)).scalar_one()
             tx.status = BookingStatus.COMPENSATED_FAILED.value
             tx.failure_reason = failure_reason
-            tx.updated_at = datetime.now(timezone.utc)
+            tx.updated_at = datetime.now(UTC)
 
             await session.commit()
             await session.refresh(tx)
@@ -504,14 +504,14 @@ class BookingEngineStreamWorker:
                                 settings.REDIS_CONSUMER_GROUP,
                                 message_id,
                             )
-                        except Exception as msg_exc:
+                        except Exception:
                             logger.exception(
-                                "Failed processing stream message %s: %s",
+                                "Failed processing stream message %s",
                                 message_id,
-                                msg_exc,
                             )
             except asyncio.CancelledError:
                 raise
-            except Exception as loop_exc:
-                logger.exception("Error in Redis Stream consumer loop: %s", loop_exc)
+            except Exception:
+                logger.exception("Error in Redis Stream consumer loop")
                 await asyncio.sleep(1.0)
+

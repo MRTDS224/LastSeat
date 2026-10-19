@@ -216,3 +216,4 @@ curl -s -X POST http://localhost:8000/api/v1/deals/partner \
 curl -s "http://localhost:8000/api/v1/rules/bookings/transactions?deal_id=PARTNER-CHARTER-SAGA-FAIL-01" | jq
 curl -s http://localhost:8000/api/v1/deals/PARTNER-CHARTER-SAGA-FAIL-01 | jq
 ```
+
