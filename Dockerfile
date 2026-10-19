@@ -15,14 +15,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml requirements.txt ./
-RUN uv pip install --system --no-cache -r requirements.txt
+COPY pyproject.toml uv.lock ./
+RUN uv pip install --system --no-cache -r pyproject.toml
 
 COPY ./app ./app
+COPY ./app.py ./app.py
 
 RUN useradd -m appuser && chown -R appuser:appuser /code
 USER appuser
 
-EXPOSE 8000
+EXPOSE 8000 8501
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

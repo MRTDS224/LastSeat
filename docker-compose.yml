@@ -52,6 +52,21 @@ services:
       redis:
         condition: service_healthy
 
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lastseat-streamlit
+    restart: unless-stopped
+    command: ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
+    environment:
+      BACKEND_URL: "http://api:8000"
+      PARTNER_API_KEY: "sk-partner-charter-secret-key-2026"
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
   redis_data:
