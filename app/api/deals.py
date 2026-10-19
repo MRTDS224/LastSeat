@@ -37,6 +37,40 @@ async def verify_partner_api_key(
 
 
 @router.post(
+    "",
+    response_model=DealIngestionAck,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Inject a last-minute deal onto the market (Partner Simulator / Unified Endpoint)",
+)
+async def create_or_ingest_deal(
+    payload: PartnerDealIngestionRequest | DealPayload,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    redis: Annotated[aioredis.Redis, Depends(get_redis)],
+    x_partner_api_key: Annotated[str | None, Header(alias="X-Partner-API-Key")] = None,
+) -> DealIngestionAck:
+    """
+    Unified market injection endpoint (`POST /api/v1/deals`).
+    Accepts either a `PartnerDealIngestionRequest` or a canonical `DealPayload`.
+    If `X-Partner-API-Key` is provided, validates it against `PARTNER_API_KEY`.
+    """
+    if x_partner_api_key and not secrets.compare_digest(
+        x_partner_api_key, settings.PARTNER_API_KEY
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid X-Partner-API-Key header.",
+        )
+
+    normalized_deal: DealPayload = (
+        payload.to_deal_payload()
+        if isinstance(payload, PartnerDealIngestionRequest)
+        else payload
+    )
+    ingestion_service = DealIngestionService(session=session, redis=redis)
+    return await ingestion_service.ingest_deal(normalized_deal)
+
+
+@router.post(
     "/partner",
     response_model=DealIngestionAck,
     status_code=status.HTTP_202_ACCEPTED,
@@ -134,4 +168,3 @@ async def get_deal(
             detail=f"Flight deal '{deal_id}' not found.",
         )
     return deal
-

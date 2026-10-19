@@ -66,9 +66,11 @@ flight-smart-booking-poc/
 ├── docker-compose.yml
 ├── Dockerfile
 ├── pyproject.toml
-├── requirements.txt
+├── uv.lock
+├── requirements-frontend.txt
 ├── .env.example
 ├── README.md
+├── app.py                     # Tableau de bord temps réel Streamlit (4 onglets)
 ├── sql/
 │   └── init.sql
 └── app/
@@ -97,9 +99,10 @@ flight-smart-booking-poc/
 
 ```bash
 docker compose up --build -d
-docker compose logs -f api
+docker compose logs -f api frontend
 ```
 
+- **Tableau de bord Streamlit (Démo Jury)** : [http://localhost:8501](http://localhost:8501)
 - **API FastAPI & Swagger UI** : [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Healthcheck** : [http://localhost:8000/health](http://localhost:8000/health)
 
@@ -114,6 +117,9 @@ uv sync
 
 # 3. Lancer l'application FastAPI avec Uvicorn via uv
 uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# 4. Dans un second terminal, lancer le tableau de bord Streamlit
+uv run streamlit run app.py
 ```
 
 ---

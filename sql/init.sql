@@ -105,5 +105,16 @@ VALUES
         'ECONOMY',
         TRUE,
         '{"first_name": "Claire", "last_name": "Dubois", "email": "claire@example.com", "passport": "FR99001122"}'::jsonb
+    ),
+    (
+        'd4444444-4444-4444-8444-444444444444',
+        'usr_karim_cmn',
+        'CMN',
+        'ORY',
+        55.00,
+        'EUR',
+        'ECONOMY',
+        TRUE,
+        '{"first_name": "Karim", "last_name": "Benali", "email": "karim@example.com", "passport": "MA77889900"}'::jsonb
     )
 ON CONFLICT (id) DO NOTHING;

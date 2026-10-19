@@ -114,14 +114,26 @@ class GDSPollerService:
 
     SAMPLE_GDS_OFFERS: ClassVar[list[dict[str, Any]]] = [
         {
-            "carrier": "AF",
-            "flight_no": "AF006",
-            "dep": "CDG",
-            "arr": "JFK",
-            "duration_hours": 8,
-            "base_price": "265.00",
+            "carrier": "AT",
+            "flight_no": "AT850",
+            "dep": "CMN",
+            "arr": "ORY",
+            "duration_hours": 3,
+            "base_price": "39.00",
+            "reference_price": 190.00,
             "cabin": CabinClass.ECONOMY,
-            "seats": 1,  # 1 seat left -> triggers high-concurrency race between Alice & Bob!
+            "seats": 2,
+        },
+        {
+            "carrier": "FR",
+            "flight_no": "FR4102",
+            "dep": "RBA",
+            "arr": "CDG",
+            "duration_hours": 3,
+            "base_price": "44.90",
+            "reference_price": 165.00,
+            "cabin": CabinClass.ECONOMY,
+            "seats": 3,
         },
         {
             "carrier": "TO",
@@ -129,29 +141,10 @@ class GDSPollerService:
             "dep": "ORY",
             "arr": "LIS",
             "duration_hours": 2,
-            "base_price": "89.90",
+            "base_price": "49.90",
+            "reference_price": 145.00,
             "cabin": CabinClass.ECONOMY,
             "seats": 2,  # Matches Claire's wildcard rule ORY -> *
-        },
-        {
-            "carrier": "BA",
-            "flight_no": "BA303",
-            "dep": "CDG",
-            "arr": "LHR",
-            "duration_hours": 1,
-            "base_price": "69.00",
-            "cabin": CabinClass.ECONOMY,
-            "seats": 3,
-        },
-        {
-            "carrier": "DL",
-            "flight_no": "DL263",
-            "dep": "CDG",
-            "arr": "JFK",
-            "duration_hours": 8,
-            "base_price": "310.00",
-            "cabin": CabinClass.ECONOMY,
-            "seats": 2,  # Matches Bob (max 320 EUR), too expensive for Alice (max 290 EUR)
         },
         {
             "carrier": "VY",
@@ -159,9 +152,21 @@ class GDSPollerService:
             "dep": "ORY",
             "arr": "BCN",
             "duration_hours": 2,
-            "base_price": "115.00",
+            "base_price": "55.00",
+            "reference_price": 140.00,
             "cabin": CabinClass.ECONOMY,
-            "seats": 1,
+            "seats": 2,
+        },
+        {
+            "carrier": "AF",
+            "flight_no": "AF006",
+            "dep": "CDG",
+            "arr": "JFK",
+            "duration_hours": 8,
+            "base_price": "265.00",
+            "reference_price": 680.00,
+            "cabin": CabinClass.ECONOMY,
+            "seats": 1,  # 1 seat left -> triggers high-concurrency race between Alice & Bob!
         },
     ]
 
@@ -215,6 +220,7 @@ class GDSPollerService:
                 "gds_provider": random.choice(["DUFFEL_SANDBOX", "AMADEUS_TEST_API"]),
                 "polled_at": now.isoformat(),
                 "fare_basis": "LASTSEAT_FLASH",
+                "reference_price": raw_offer.get("reference_price", 150.00),
             },
         )
 
