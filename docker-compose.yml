@@ -11,12 +11,11 @@ services:
       - "15432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lastseat} -d ${POSTGRES_DB:-lastseat_db}"]
-      interval: 5s
+      interval: 3s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -29,9 +28,9 @@ services:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
+      interval: 3s
       timeout: 3s
-      retries: 5
+      retries: 10
 
   api:
     build:

@@ -1,15 +1,19 @@
 import logging
+import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from decimal import Decimal
 from typing import Any
 
 from fastapi import FastAPI
 from sqlalchemy import text
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.api.deals import router as deals_router
 from app.api.rules import router as rules_router
 from app.config import get_settings
 from app.database import AsyncSessionLocal, Base, close_redis, engine, init_redis
+from app.models import AgentRule
 from app.services.booking_engine import BookingEngineStreamWorker
 from app.services.ingestion import GDSPollerService
 
@@ -21,21 +25,101 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+DEFAULT_SEED_RULES: list[dict[str, Any]] = [
+    {
+        "id": uuid.UUID("a1111111-1111-4111-8111-111111111111"),
+        "user_id": "usr_alice_01",
+        "origin": "CDG",
+        "destination": "JFK",
+        "max_price": Decimal("290.00"),
+        "currency": "EUR",
+        "preferred_cabin": "ECONOMY",
+        "auto_purchase_enabled": True,
+        "passenger_info": {
+            "first_name": "Alice",
+            "last_name": "Martin",
+            "email": "alice@example.com",
+            "passport": "FR10293847",
+        },
+    },
+    {
+        "id": uuid.UUID("b2222222-2222-4222-8222-222222222222"),
+        "user_id": "usr_bob_02",
+        "origin": "CDG",
+        "destination": "JFK",
+        "max_price": Decimal("320.00"),
+        "currency": "EUR",
+        "preferred_cabin": "ECONOMY",
+        "auto_purchase_enabled": True,
+        "passenger_info": {
+            "first_name": "Bob",
+            "last_name": "Bernard",
+            "email": "bob@example.com",
+            "passport": "FR55667788",
+        },
+    },
+    {
+        "id": uuid.UUID("c3333333-3333-4333-8333-333333333333"),
+        "user_id": "usr_claire_nomad",
+        "origin": "ORY",
+        "destination": None,
+        "max_price": Decimal("150.00"),
+        "currency": "EUR",
+        "preferred_cabin": "ECONOMY",
+        "auto_purchase_enabled": True,
+        "passenger_info": {
+            "first_name": "Claire",
+            "last_name": "Dubois",
+            "email": "claire@example.com",
+            "passport": "FR99001122",
+        },
+    },
+    {
+        "id": uuid.UUID("d4444444-4444-4444-8444-444444444444"),
+        "user_id": "usr_karim_cmn",
+        "origin": "CMN",
+        "destination": "ORY",
+        "max_price": Decimal("55.00"),
+        "currency": "EUR",
+        "preferred_cabin": "ECONOMY",
+        "auto_purchase_enabled": True,
+        "passenger_info": {
+            "first_name": "Karim",
+            "last_name": "Benali",
+            "email": "karim@example.com",
+            "passport": "MA77889900",
+        },
+    },
+]
+
+
+async def seed_default_rules() -> None:
+    """Idempotently seed default autonomous agent rules for immediate demo readiness."""
+    async with AsyncSessionLocal() as session:
+        stmt = (
+            pg_insert(AgentRule)
+            .values(DEFAULT_SEED_RULES)
+            .on_conflict_do_nothing(index_elements=[AgentRule.id])
+        )
+        await session.execute(stmt)
+        await session.commit()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Application lifecycle manager:
-    - Connects to PostgreSQL and ensures ORM tables exist.
+    - Connects to PostgreSQL, ensures ORM tables exist, and seeds demo rules.
     - Initializes Redis connection pool and Consumer Group.
     - Starts the background BookingEngineStreamWorker and simulated GDSPollerService.
     - Performs clean shutdown of workers and connection pools on exit.
     """
     logger.info("Starting %s [env=%s]...", settings.APP_NAME, settings.ENVIRONMENT)
 
-    # Ensure database schema is initialized
+    # Ensure database schema is initialized and default rules are seeded
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await seed_default_rules()
 
     redis = await init_redis()
     await redis.ping()
@@ -114,4 +198,3 @@ async def healthcheck() -> dict[str, Any]:
         "stream_backlog": stream_length,
         "poller_enabled": settings.POLLER_ENABLED,
     }
-
