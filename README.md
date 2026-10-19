@@ -67,7 +67,6 @@ flight-smart-booking-poc/
 ├── Dockerfile
 ├── pyproject.toml
 ├── uv.lock
-├── requirements-frontend.txt
 ├── .env.example
 ├── README.md
 ├── app.py                     # Tableau de bord temps réel Streamlit (4 onglets)

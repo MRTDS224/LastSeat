@@ -13,13 +13,13 @@ class Settings(BaseSettings):
     # Security
     PARTNER_API_KEY: str = "sk-partner-charter-secret-key-2026"
 
-    # Database (SQLAlchemy Async)
+    # Database (SQLAlchemy Async - port 5433 on host mapped to lastseat-postgres:5432)
     DATABASE_URL: str = (
-        "postgresql+asyncpg://lastseat:lastseat_password@localhost:5432/lastseat_db"
+        "postgresql+asyncpg://lastseat:lastseat_password@127.0.0.1:5433/lastseat_db"
     )
 
-    # Redis (Streams + Distributed Locking + Idempotency)
-    REDIS_URL: str = "redis://localhost:6379/0"
+    # Redis (Streams + Distributed Locking + Idempotency - port 6380 on host mapped to lastseat-redis:6379)
+    REDIS_URL: str = "redis://127.0.0.1:6380/0"
     REDIS_DEALS_STREAM: str = "stream:flight_deals"
     REDIS_CONSUMER_GROUP: str = "cg:booking_engine"
     REDIS_CONSUMER_NAME: str = "worker-1"
