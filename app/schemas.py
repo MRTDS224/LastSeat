@@ -129,7 +129,7 @@ class PartnerDealIngestionRequest(BaseModel):
             cabin_class=self.cabin,
             seats_available=self.remaining_seats,
             expires_at=self.offer_valid_until_utc,
-            raw_metadata={"partner_notes": self.partner_notes},
+            raw_metadata={"partner_notes": self.partner_notes, **self.partner_notes},
         )
 
 
