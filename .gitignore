@@ -1,0 +1,28 @@
+# Python / uv
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+.uv/
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
